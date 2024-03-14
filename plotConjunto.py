@@ -24,7 +24,7 @@ plt.gca().xaxis.set_minor_locator(mdates.DayLocator(interval=5))
 plt.gca().xaxis.set_minor_formatter(mdates.DateFormatter('%d'))
 
 # Resalta el periodo sin datos
-fecha_inicio_sin_datos = pd.to_datetime("2022-06-22")
+fecha_inicio_sin_datos = pd.to_datetime("2022-06-23")
 fecha_fin_sin_datos = pd.to_datetime("2022-07-13")
 plt.axvspan(fecha_inicio_sin_datos, fecha_fin_sin_datos, color='red', alpha=0.3, label='Período sin datos')
 
