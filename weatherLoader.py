@@ -15,8 +15,9 @@ ciudades = {
 
 from datetime import datetime
 from meteostat import Hourly, Stations
+import pandas as pd
 
-# Establecer el período de tiempo
+# Definir el período de tiempo
 start = datetime(2021, 12, 20)
 end = datetime(2022, 9, 8)
 
@@ -36,7 +37,13 @@ if not station.empty:
     # Imprimir los primeros registros para verificar
     print(data.head())
 
-    # Opcional: Guardar los datos en un archivo CSV
-    data.to_csv('/Users/andrew/Desktop/ETSIT 23-24/TFG/Dataset/datosTiempo/amsterdam_weather.csv')
+    # Convertir los índices a una columna de timestamp
+    data.reset_index(inplace=True)
+    data.rename(columns={'time': 'timestamp'}, inplace=True)
+
+    # Guardar los datos en un archivo Parquet
+    ruta_parquet = '/Users/andrew/Desktop/ETSIT 23-24/TFG/Dataset/datosTiempo/amsterdam_weather.parquet'
+    data.to_parquet(ruta_parquet)
+    print(f"Datos meteorológicos guardados con éxito en formato Parquet en {ruta_parquet}.")
 else:
     print("No se encontró una estación cercana.")

@@ -1,50 +1,46 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.dates import HourLocator, DateFormatter
 import matplotlib.dates as mdates
+import seaborn as sns
 
-# Cargar los datos de latencia del ping
-df_ping = pd.read_parquet('/Users/andrew/Desktop/ETSIT 23-24/TFG/Dataset/ping/df_ping_193_0_19_59.parquet')
 
-# Convertir la columna 'timestamp' a datetime y establecerla como índice
+# Carga los datos
+df_ping = pd.read_parquet('/Users/andrew/Desktop/ETSIT 23-24/TFG/Dataset/ping/df_ping.parquet')
+
+# Convertir el timestamp a datetime y establecerlo como índice si aún no se ha hecho
 df_ping['timestamp'] = pd.to_datetime(df_ping['timestamp'])
 df_ping.set_index('timestamp', inplace=True)
 
-# Seleccionar solo la columna 'time_ms' y resumir los datos de ping por hora
-df_ping_hourly = df_ping[['time_ms']].resample('H').mean()
+# Resample por hora tomando solo la columna 'time_ms' para el promedio, usando 'h'
+df_ping_hourly = df_ping[['time_ms']].resample('h').mean()
 
-# Cargar los datos meteorológicos que has guardado
-df_weather = pd.read_csv('/Users/andrew/Desktop/ETSIT 23-24/TFG/Dataset/datosTiempo/amsterdam_weather.csv', parse_dates=['time'], index_col='time')
+# Filtrar datos para la primera semana
+start_date = df_ping_hourly.index.min()
+end_date = start_date + pd.Timedelta(days=7)
+df_ping_first_week = df_ping_hourly.loc[start_date:end_date]
 
-# Unir los datos de ping y los datos meteorológicos en un solo DataFrame
-df_combined = df_ping_hourly.join(df_weather, how='inner')
+# Crear la nube de puntos con círculos vacíos
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.scatter(df_ping_first_week.index, df_ping_first_week['time_ms'], edgecolor='b', facecolors='none', marker='o')
 
-# Visualización
-fig, ax1 = plt.subplots(figsize=(14, 7))
+# Formatear el eje x para mostrar las fechas correctamente con un intervalo de 3 horas
 
-color = 'tab:red'
-ax1.set_xlabel('Time')
-ax1.set_ylabel('Latency (ms)', color=color)
-ax1.plot(df_combined.index, df_combined['time_ms'], color=color, label='Latency')
-ax1.tick_params(axis='y', labelcolor=color)
 
-# Crear un segundo eje y para la precipitación y la duración del sol
-ax2 = ax1.twinx()
-color_prcp = 'tab:blue'
-color_tsun = 'tab:orange'
-ax2.set_ylabel('Weather', color=color_prcp)
-lns1 = ax2.plot(df_combined.index, df_combined['prcp'], color=color_prcp, label='Precipitation (mm)')
-lns2 = ax2.plot(df_combined.index, df_combined['tsun'], color=color_tsun, label='Sunshine Duration (min)', linestyle='--')
-ax2.tick_params(axis='y', labelcolor=color_prcp)
 
-# Combinar leyendas
-lns = lns1 + lns2
-labs = [l.get_label() for l in lns]
-ax1.legend(lns, labs, loc=0)
+# Configura la visualización de fechas en el eje x
+plt.gca().xaxis.set_minor_locator(mdates.HourLocator(interval=3))
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+#plt.gca().xaxis.set_minor_formatter(mdates.DateFormatter())
 
-# Formatear el eje x para mostrar fechas de manera clara
-ax1.xaxis.set_major_locator(mdates.DayLocator(interval=15))
-ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-plt.xticks(rotation=45)
-
-plt.title('Ping Latency and Weather Conditions in Amsterdam')
+plt.xticks(rotation=45)  # Rota las etiquetas para mejor legibilidad
+plt.ylabel('Ping Time (ms)')
+plt.title('Weekly Ping Time Overview')
+plt.tight_layout()
 plt.show()
+
+# # Cargar los datos meteorológicos
+# df_weather = pd.read_parquet('/Users/andrew/Desktop/ETSIT 23-24/TFG/Dataset/datosTiempo/amsterdam_weather.parquet')
+# df_weather['timestamp'] = pd.to_datetime(df_weather['timestamp'])
+# df_weather.set_index('timestamp', inplace=True)
